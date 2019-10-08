@@ -33,7 +33,8 @@ namespace Sds.Osdr.WebApi.IntegrationTests
                 'displayName': '{JohnDoe.DisplayName}',
                 'firstName': '{JohnDoe.FirstName}',
                 'lastName': '{JohnDoe.LastName}',
-                'avatar': '{JohnDoe.Avatar}'
+                'avatar': '{JohnDoe.Avatar}',
+                'role': '{JohnDoe.Role}'
 			}}");
         }
     }

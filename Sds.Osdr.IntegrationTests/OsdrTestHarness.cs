@@ -267,7 +267,7 @@ namespace Sds.Osdr.IntegrationTests
             }
             catch (AggregateException)
             {
-                this.CreateUser(JohnId, "John Doe", "John", "Doe", "john", "john@your-company.com", null, JohnId).Wait();
+                this.CreateUser(JohnId, "John Doe", "John", "Doe", "john", "john@your-company.com", null, JohnId, new string[] { "client_admin" }).Wait();
             }
 
             var jane = keycloak.GetUserInfo("jane", "qqq123").Result;
@@ -280,7 +280,7 @@ namespace Sds.Osdr.IntegrationTests
             }
             catch (AggregateException)
             {
-                this.CreateUser(JaneId, "Jane Doe", "Jane", "Doe", "jane", "jane@your-company.com", null, JaneId).Wait();
+                this.CreateUser(JaneId, "Jane Doe", "Jane", "Doe", "jane", "jane@your-company.com", null, JaneId, new string[] { "client_admin" }).Wait();
             }
         }
 

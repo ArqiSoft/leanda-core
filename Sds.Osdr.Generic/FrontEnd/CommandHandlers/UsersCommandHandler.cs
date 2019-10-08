@@ -29,7 +29,8 @@ namespace Sds.Osdr.Generic.FrontEnd.CommandHandlers
                     displayName: context.Message.DisplayName,
                     loginName: context.Message.LoginName,
                     email: context.Message.Email,
-                    avatar: context.Message.Avatar
+                    avatar: context.Message.Avatar,
+                    role: context.Message.Role
                 ));
 
                 await _session.Commit();
@@ -52,7 +53,8 @@ namespace Sds.Osdr.Generic.FrontEnd.CommandHandlers
                     context.Message.NewLastName,
                     context.Message.NewDisplayName,
                     newEmail: context.Message.NewEmail,
-                    newAvatar: context.Message.NewAvatar
+                    newAvatar: context.Message.NewAvatar,
+                    newRole: context.Message.NewRole
                 );
 
                 await _session.Commit();

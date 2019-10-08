@@ -35,6 +35,7 @@ namespace Sds.Osdr.Generic.Persistence.EventHandlers.Nodes
                 .Set("LoginName", context.Message.LoginName)
                 .Set("Email", context.Message.Email)
                 .Set("Avatar", context.Message.Avatar)
+                .Set("Role", context.Message.Role)
                 .Set("Version", context.Message.Version);
 
             await Nodes.UpdateOneAsync(filter, update, options);
@@ -58,6 +59,7 @@ namespace Sds.Osdr.Generic.Persistence.EventHandlers.Nodes
                 .Set("DisplayName", context.Message.DisplayName)
                 .Set("FirstName", context.Message.FirstName)
                 .Set("LastName", context.Message.LastName)
+                .Set("Role", context.Message.Role)
                 .Set("Version", context.Message.Version);
 
             var node = await Nodes.FindOneAndUpdateAsync(filter, update);

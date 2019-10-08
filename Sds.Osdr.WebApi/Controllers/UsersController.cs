@@ -53,6 +53,7 @@ namespace Sds.Osdr.WebApi.Controllers
                     request.LoginName,
                     request.Email,
                     request.Avatar,
+                    request.Role,
                     UserId
                 });
             }
@@ -67,6 +68,7 @@ namespace Sds.Osdr.WebApi.Controllers
                     request.LoginName,
                     NewEmail = request.Email,
                     NewAvatar = request.Avatar,
+                    NewRole = request.Role,
                     UserId
                 });
             }

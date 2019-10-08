@@ -259,13 +259,14 @@ namespace Sds.Osdr.WebApi
                        var path = context.HttpContext.Request.Path;
                        if (!string.IsNullOrEmpty(accessToken))
                        {
-                            // Read the token out of the query string
-                            context.Token = accessToken;
+                           // Read the token out of the query string
+                           context.Token = accessToken;
                        }
                        return Task.CompletedTask;
                    }
-              };
+               };
            });
+            services.AddAuthorization(options => options.AddPolicy("Administrator", policy => policy.RequireClaim("user_role", "client_admin")));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

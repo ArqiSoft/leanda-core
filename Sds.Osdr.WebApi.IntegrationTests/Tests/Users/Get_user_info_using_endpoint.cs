@@ -37,7 +37,8 @@ namespace Sds.Osdr.WebApi.IntegrationTests
                 'loginName': '{JohnDoe.LoginName}',
                 'email': '{JohnDoe.Email}',
                 'avatar': '{JohnDoe.Avatar}',
-                'version': '{JohnDoe.Version}'
+                'version': '{JohnDoe.Version}',
+                'role': '{JohnDoe.Role}'
 			}}");
         }
 

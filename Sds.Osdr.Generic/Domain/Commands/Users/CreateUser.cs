@@ -11,6 +11,7 @@ namespace Sds.Osdr.Generic.Domain.Commands.Users
         string LoginName { get; }
         string Email { get; }
         string Avatar { get; }
+        string[] Role { get; }
         Guid UserId { get; }
 	}
 }

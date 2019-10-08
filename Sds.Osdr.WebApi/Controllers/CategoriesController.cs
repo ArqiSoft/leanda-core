@@ -19,7 +19,7 @@ using Leanda.Categories.Domain;
 namespace Sds.Osdr.WebApi.Controllers
 {
     [Route("api/[controller]")]
-    [Authorize]
+    [Authorize(Policy = "Administrator")]
     [UserInfoRequired]
     public class CategoriesController : MongoDbController, IPaginationController
     {

@@ -24,7 +24,8 @@ namespace Sds.Osdr.IntegrationTests.FluentAssersions
                 { "LoginName", user.LoginName },
                 { "Email", user.Email },
                 { "Avatar", user.Avatar },
-                { "Version", user.Version }
+                { "Version", user.Version },
+                { "Role", user.Role }
             });
         }
 
@@ -46,7 +47,8 @@ namespace Sds.Osdr.IntegrationTests.FluentAssersions
                 { "LoginName", user.LoginName },
                 { "Email", user.Email },
                 { "Avatar", user.Avatar },
-                { "Version", user.Version }
+                { "Version", user.Version },
+                { "Role", user.Role }
             });
         }
     }

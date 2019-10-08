@@ -18,6 +18,7 @@
           { "type" : "password",
             "value" : "qqq123" }
       ],
+      "user_role": ["client_admin"],
       "realmRoles": [ "user" ],
       "clientRoles": {
           "account": ["view-profile", "manage-account"]

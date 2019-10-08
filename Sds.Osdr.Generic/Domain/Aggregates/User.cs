@@ -32,6 +32,7 @@ namespace Sds.Osdr.Generic.Domain
         public string LoginName { get; set; }
         public string Email { get; set; }
         public string Avatar { get; set; }
+        public string[] Role { get; set; }
 
         private void Apply(UserCreated e)
         {
@@ -46,6 +47,7 @@ namespace Sds.Osdr.Generic.Domain
             LoginName = e.LoginName;
             Email = e.Email;
             Avatar = e.Avatar;
+            Role = e.Role;
         }
 
         private void Apply(UserUpdated e)
@@ -57,21 +59,22 @@ namespace Sds.Osdr.Generic.Domain
             DisplayName = e.LastName;
             Email = e.Email;
             Avatar = e.Avatar;
+            Role = e.Role;
         }
 
         private User()
         {
         }
 
-        public User(Guid id, Guid userId, string firstName, string lastName, string displayName, string loginName, string email, string avatar)
+        public User(Guid id, Guid userId, string firstName, string lastName, string displayName, string loginName, string email, string avatar, string[] role)
         {
             Id = id;
-            ApplyChange(new UserCreated(Id, userId, firstName, lastName, displayName, loginName, email, avatar));
+            ApplyChange(new UserCreated(Id, userId, firstName, lastName, displayName, loginName, email, avatar, role));
         }
 
-        public void Update(Guid id, Guid userId, string newFirstName, string newLastName, string newDisplayName, string newEmail, string newAvatar)
+        public void Update(Guid id, Guid userId, string newFirstName, string newLastName, string newDisplayName, string newEmail, string newAvatar, string[] newRole)
         {
-            ApplyChange(new UserUpdated(id, userId, newFirstName, newLastName, newDisplayName, newEmail, newAvatar));
+            ApplyChange(new UserUpdated(id, userId, newFirstName, newLastName, newDisplayName, newEmail, newAvatar, newRole));
         }
     }
 }

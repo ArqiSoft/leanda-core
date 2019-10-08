@@ -558,6 +558,7 @@ namespace Sds.Osdr.WebApi.Controllers
                             LoginName:1,
                             Email:1,
                             Avatar:1,
+                            Role:1,
                             AccessPermissions:1
                         }")
                 .Sort("{ Order:1, Name:1 }")

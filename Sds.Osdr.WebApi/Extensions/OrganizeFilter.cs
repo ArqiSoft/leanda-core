@@ -41,7 +41,7 @@ namespace Sds.Osdr.WebApi.Extensions
         {
             if (!string.IsNullOrEmpty(s))
             {
-                foreach (var condition in s.Trim('[', ']').Split(new[] { "and" }, StringSplitOptions.RemoveEmptyEntries))
+            foreach (var condition in s.Trim('[', ']').Split(new[] { "and" }, StringSplitOptions.RemoveEmptyEntries))
                 {
                     var conditionArray = condition.Trim().Split(new[] { ' ' }, 3, StringSplitOptions.RemoveEmptyEntries);
 

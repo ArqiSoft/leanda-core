@@ -11,8 +11,9 @@ namespace Sds.Osdr.Generic.Domain.Events.Users
         public readonly string LastName;
         public readonly string Email;
         public readonly string Avatar;
+        public readonly string[] Role;
 
-        public UserUpdated(Guid id, Guid userId, string firstName, string lastName, string displayName, string email, string avatar)
+        public UserUpdated(Guid id, Guid userId, string firstName, string lastName, string displayName, string email, string avatar, string[] role)
         {
             Id = id;
             DisplayName = displayName;
@@ -21,6 +22,7 @@ namespace Sds.Osdr.Generic.Domain.Events.Users
             UserId = userId;
             Email = email;
             Avatar = avatar;
+            Role = role;
         }
 
         public Guid Id { get; set; }

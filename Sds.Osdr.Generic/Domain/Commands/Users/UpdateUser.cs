@@ -10,6 +10,7 @@ namespace Sds.Osdr.Generic.Domain.Commands.Users
         string NewLastName { get; }
         string NewEmail { get; }
         string NewAvatar { get; }
+        string[] NewRole { get; }
         Guid UserId { get; }
         int ExpectedVersion { get; }
 	}

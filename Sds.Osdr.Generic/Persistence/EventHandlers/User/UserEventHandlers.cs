@@ -36,6 +36,7 @@ namespace Sds.Osdr.Generic.Persistence.EventHandlers.Users
                 .Set(nameof(context.Message.LoginName), context.Message.LoginName)
                 .Set(nameof(context.Message.Email), context.Message.Email)
                 .Set(nameof(context.Message.Avatar), context.Message.Avatar)
+                .Set(nameof(context.Message.Role), context.Message.Role)
                 .Inc("Version", 1);
 
             await Users.UpdateOneAsync(filter, update, options);
@@ -47,6 +48,7 @@ namespace Sds.Osdr.Generic.Persistence.EventHandlers.Users
                 FirstName = context.Message.FirstName,
                 LastName = context.Message.LastName,
                 TimeStamp = DateTimeOffset.UtcNow,
+                Role = context.Message.Role,
                 Version = context.Message.Version
             });
         }
@@ -63,6 +65,7 @@ namespace Sds.Osdr.Generic.Persistence.EventHandlers.Users
                 .Set(nameof(context.Message.LastName), context.Message.LastName)
                 .Set(nameof(context.Message.Email), context.Message.Email)
                 .Set(nameof(context.Message.Avatar), context.Message.Avatar)
+                .Set(nameof(context.Message.Role), context.Message.Role)
                 .Inc("Version", 1);
 
             var node = await Users.FindOneAndUpdateAsync(filter, update);

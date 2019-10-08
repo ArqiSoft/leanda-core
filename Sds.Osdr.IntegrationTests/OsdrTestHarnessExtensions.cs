@@ -61,16 +61,16 @@ namespace Sds.Osdr.IntegrationTests
             return guids.First();
         }
 
-        public static async Task<Guid> CreateUser(this OsdrTestHarness harness, string displayName, string firstName, string lastName, string loginName, string email, string avatar, Guid userId)
+        public static async Task<Guid> CreateUser(this OsdrTestHarness harness, string displayName, string firstName, string lastName, string loginName, string email, string avatar, Guid userId, string[] role)
         {
             Guid id = NewId.NextGuid();
 
-            await harness.CreateUser(id, displayName, firstName, lastName, loginName, email, avatar, userId);
+            await harness.CreateUser(id, displayName, firstName, lastName, loginName, email, avatar, userId, role);
 
             return id;
         }
 
-        public static async Task CreateUser(this OsdrTestHarness harness, Guid id, string displayName, string firstName, string lastName, string loginName, string email, string avatar, Guid userId)
+        public static async Task CreateUser(this OsdrTestHarness harness, Guid id, string displayName, string firstName, string lastName, string loginName, string email, string avatar, Guid userId, string[] role)
         {
             await harness.BusControl.Publish<CreateUser>(new
             {
@@ -81,7 +81,8 @@ namespace Sds.Osdr.IntegrationTests
                 LoginName = loginName,
                 Email = email,
                 Avatar = avatar,
-                UserId = userId
+                UserId = userId,
+                Role = role
             });
 
             if (!harness.Received.Select<Generic.Domain.Events.Users.UserPersisted>(m => m.Context.Message.Id == id).Any())

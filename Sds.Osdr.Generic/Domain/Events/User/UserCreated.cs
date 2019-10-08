@@ -11,8 +11,9 @@ namespace Sds.Osdr.Generic.Domain.Events.Users
         public readonly string LoginName;
         public readonly string Email;
         public readonly string Avatar;
+        public readonly string[] Role;
 
-        public UserCreated(Guid id, Guid userId, string firstName, string lastName, string displayName, string loginName, string email, string avatar)
+        public UserCreated(Guid id, Guid userId, string firstName, string lastName, string displayName, string loginName, string email, string avatar, string[] role)
         {
             Id = id;
             UserId = userId;
@@ -22,6 +23,7 @@ namespace Sds.Osdr.Generic.Domain.Events.Users
             LoginName = loginName;
             Email = email;
             Avatar = avatar;
+            Role = role;
         }
 
         public Guid Id { get; set; }

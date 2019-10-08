@@ -21,7 +21,7 @@ namespace Sds.Osdr.IntegrationTests
 
         public NewUserFixture(OsdrTestHarness harness)
         {
-            NewUserId = harness.CreateUser("Johnny Doe", "Johnny", "Doe", "johnny", "johnny@your-company.com", null, harness.JohnId).Result;
+            NewUserId = harness.CreateUser("Johnny Doe", "Johnny", "Doe", "johnny", "johnny@your-company.com", null, harness.JohnId, {"client_admin"}).Result;
         }
     }
 
@@ -52,7 +52,8 @@ namespace Sds.Osdr.IntegrationTests
                 LastName = "Doe",
                 DisplayName = "Johnny Doe",
                 LoginName = "johnny",
-                Email = "johnny@your-company.com"
+                Email = "johnny@your-company.com",
+                Role = new string[] {"client_admin"},
             }, options => options
                 .ExcludingMissingMembers()
             );
