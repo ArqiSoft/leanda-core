@@ -15,6 +15,7 @@ using Sds.Osdr.WebApi.Extensions;
 using System.Linq;
 using CQRSlite.Domain;
 using Leanda.Categories.Domain;
+using Microsoft.AspNetCore.JsonPatch;
 
 namespace Sds.Osdr.WebApi.Controllers
 {
@@ -23,7 +24,7 @@ namespace Sds.Osdr.WebApi.Controllers
     [UserInfoRequired]
     public class CategoryTreesController : MongoDbController, IPaginationController
     {
-        private IBusControl _bus;
+        private IBusControl Bus;
         private IMongoCollection<BsonDocument> _categoryTreeCollection;
         private IMongoCollection<BsonDocument> _nodesCollection;
         private readonly ISession _session;
@@ -31,7 +32,7 @@ namespace Sds.Osdr.WebApi.Controllers
 
         public CategoryTreesController(IMongoDatabase database, IBusControl bus, IUrlHelper urlHelper, ISession session) : base(database)
         {
-            _bus = bus ?? throw new ArgumentNullException(nameof(bus));
+            Bus = bus ?? throw new ArgumentNullException(nameof(bus));
             _urlHelper = urlHelper ?? throw new ArgumentNullException(nameof(urlHelper));
             _categoryTreeCollection = Database.GetCollection<BsonDocument>("CategoryTrees");
             _nodesCollection = Database.GetCollection<BsonDocument>("Nodes");
@@ -78,7 +79,7 @@ namespace Sds.Osdr.WebApi.Controllers
 
             nodes.InitNodeIds();
 
-            await _bus.Publish<CreateCategoryTree>(new
+            await Bus.Publish<CreateCategoryTree>(new
             {
                 Id = categoriesTreeId,
                 UserId,
@@ -122,6 +123,124 @@ namespace Sds.Osdr.WebApi.Controllers
         /// <param name="nodes">New categories tree nodes</param>
         /// <param name="version">Carrent cattegories tree object version</param>
         /// <returns></returns>
+        [HttpPatch("tree/{id}")]
+        [Authorize(Policy = "Administrator")]
+        public async Task<IActionResult> PatchCategoriesTree(Guid id, [FromBody] JsonPatchDocument<UpdateCategoryTreeRequest> request, int version)
+        {
+            var treeView = await _categoryTreeCollection.Find(new BsonDocument("_id", id)).FirstOrDefaultAsync();
+
+            if (treeView == null)
+            {
+                return NotFound();
+            }
+
+            var operationsCollection = new UpdateCategoryTreeRequest();
+            request.ApplyTo(operationsCollection);
+
+            if (operationsCollection.Nodes.Any())
+            {
+                var tree = await _session.Get<CategoryTree>(id);
+                var aggregateIds = tree.Nodes.GetNodeIds();
+                var requestIds = operationsCollection.Nodes.GetNodeIds();
+
+                if (!requestIds.All(i => aggregateIds.Contains(i)))
+                {
+                    var invalidIds = requestIds.Where(i => !aggregateIds.Contains(i));
+
+                    return BadRequest($"Can not find nodes with ids {string.Join(", ", invalidIds)}");
+                }
+
+                operationsCollection.Nodes.InitNodeIds();
+
+                await Bus.Publish<UpdateCategoryTree>(new
+                {
+                    Id = id,
+                    UserId = UserId,
+                    Nodes = operationsCollection.Nodes,
+                    ExpectedVersion = version
+                });
+            }
+
+            if (operationsCollection.IsDeleted)
+            {
+                await Bus.Publish<DeleteCategoryTree>(new
+                {
+                    Id = id,
+                    UserId,
+                    ExpectedVersion = version
+                });
+            }
+
+            return Accepted();
+        }
+
+        /// <summary>
+        /// Update categories tree node
+        /// </summary>
+        /// <param name="id">Categories tree ID</param>
+        /// <param name="nodeId">Categories tree node ID</param>
+        /// <param name="nodes">New categories tree nodes</param>
+        /// <param name="version">Carrent cattegories tree object version</param>
+        /// <returns></returns>
+        [HttpPatch("tree/{id}/{nodeId}")]
+        [Authorize(Policy = "Administrator")]
+        public async Task<IActionResult> PatchCategoriesTreeNode(Guid id, Guid nodeId, [FromBody] JsonPatchDocument<UpdateCategoryTreeRequest> request, int version)
+        {
+            //TODO: Validate input parapeters e.g. title
+            var treeView = await _categoryTreeCollection.Find(new BsonDocument("_id", id)).FirstOrDefaultAsync();
+
+            if (treeView == null)
+            {
+                return NotFound();
+            }
+
+            var tree = await _session.Get<CategoryTree>(id);
+
+            if (!tree.Nodes.ContainsTree(nodeId))
+            {
+                return NotFound();
+            }
+
+            var operations = new UpdateCategoryTreeRequest();
+
+            request.ApplyTo(operations);
+
+            if (operations.Nodes.Any())
+            {
+                operations.Nodes.InitNodeIds();
+
+                await Bus.Publish<UpdateCategoryTree>(new
+                {
+                    Id = id,
+                    ParentId = nodeId,
+                    UserId = UserId,
+                    Nodes = operations.Nodes,
+                    ExpectedVersion = version
+                });
+            }
+
+            if (operations.IsDeleted)
+            {
+                await Bus.Publish<DeleteCategoryTreeNode>(new
+                {
+                    Id = id,
+                    NodeId = nodeId,
+                    UserId,
+                    ExpectedVersion = version
+                });
+            }
+
+            return Accepted();
+        }
+
+
+        /// <summary>
+        /// Update categories tree
+        /// </summary>
+        /// <param name="id">Categories tree ID</param>
+        /// <param name="nodes">New categories tree nodes</param>
+        /// <param name="version">Carrent cattegories tree object version</param>
+        /// <returns></returns>
         [HttpPut("tree/{id}")]
         [Authorize(Policy = "Administrator")]
         public async Task<IActionResult> UpdateCategoriesTree(Guid id, [FromBody] List<TreeNode> nodes, int version)
@@ -145,7 +264,7 @@ namespace Sds.Osdr.WebApi.Controllers
 
             nodes.InitNodeIds();
 
-            await _bus.Publish<UpdateCategoryTree>(new
+            await Bus.Publish<UpdateCategoryTree>(new
             {
                 Id = id,
                 UserId = UserId,
@@ -185,7 +304,7 @@ namespace Sds.Osdr.WebApi.Controllers
 
             nodes.InitNodeIds();
 
-            await _bus.Publish<UpdateCategoryTree>(new
+            await Bus.Publish<UpdateCategoryTree>(new
             {
                 Id = id,
                 ParentId = nodeId,
@@ -208,7 +327,7 @@ namespace Sds.Osdr.WebApi.Controllers
                 return NotFound();
             }
 
-            await _bus.Publish<DeleteCategoryTree>(new
+            await Bus.Publish<DeleteCategoryTree>(new
             {
                 Id = id,
                 UserId,
@@ -236,7 +355,7 @@ namespace Sds.Osdr.WebApi.Controllers
                 return NotFound();
             }
 
-            await _bus.Publish<DeleteCategoryTreeNode>(new
+            await Bus.Publish<DeleteCategoryTreeNode>(new
             {
                 Id = id,
                 NodeId = nodeId,
