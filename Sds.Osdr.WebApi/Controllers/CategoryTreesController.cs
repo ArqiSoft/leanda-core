@@ -16,6 +16,7 @@ using System.Linq;
 using CQRSlite.Domain;
 using Leanda.Categories.Domain;
 using Microsoft.AspNetCore.JsonPatch;
+using MongoDB.Bson.Serialization;
 
 namespace Sds.Osdr.WebApi.Controllers
 {
@@ -341,16 +342,14 @@ namespace Sds.Osdr.WebApi.Controllers
         [Authorize(Policy = "Administrator")]
         public async Task<IActionResult> DeleteCategoriesTreeNode(Guid id, Guid nodeId, int version)
         {
-            var treeView = await _categoryTreeCollection.Find(new BsonDocument("_id", id)).FirstOrDefaultAsync();
+            var treeBsonDoc = await _categoryTreeCollection.Find(new BsonDocument("_id", id)).FirstOrDefaultAsync();
 
-            if (treeView == null)
+            if (treeBsonDoc == null)
             {
                 return NotFound();
             }
 
-            var tree = await _session.Get<CategoryTree>(id);
-
-            if (!tree.Nodes.ContainsTree(nodeId))
+            if (!treeBsonDoc["Nodes"].AsBsonArray.ContainsTreeInBsonDocument(nodeId))
             {
                 return NotFound();
             }

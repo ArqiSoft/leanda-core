@@ -89,6 +89,24 @@ namespace Leanda.Categories.Domain.ValueObjects
             return false;
         }
 
+        public static bool ContainsTreeInBsonDocument(this MongoDB.Bson.BsonArray nodes, Guid id)
+        {
+            foreach (var node in nodes)
+            {
+                if (node["_id"].AsGuid == id)
+                {
+                    return true;
+                }
+                if (node["Children"] != MongoDB.Bson.BsonNull.Value)
+                {
+                    if(node["Children"].AsBsonArray.ContainsTreeInBsonDocument(id)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         public static void DeleteCategoryNodeById(this IEnumerable<TreeNode> nodes, Guid id)
         {
             foreach (var node in nodes)
