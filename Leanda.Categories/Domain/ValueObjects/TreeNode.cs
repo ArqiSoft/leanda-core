@@ -41,11 +41,11 @@ namespace Leanda.Categories.Domain.ValueObjects
         {
             foreach (var node in nodes)
             {
-                if(node.Id == default(Guid))
+                if (node.Id == default(Guid))
                 {
                     node.Id = Guid.NewGuid();
                 }
-                
+
                 if (node.Children != null && node.Children.Any())
                 {
                     node.Children.InitNodeIds();
@@ -65,7 +65,7 @@ namespace Leanda.Categories.Domain.ValueObjects
                 if (node.Children != null && node.Children.Any())
                 {
                     var guids = node.Children.GetNodeIds();
-                    foreach(var id in guids)
+                    foreach (var id in guids)
                     {
                         yield return id;
                     }
@@ -81,9 +81,62 @@ namespace Leanda.Categories.Domain.ValueObjects
                 {
                     return true;
                 }
-                return node.Children.ContainsTree(id);
+                if (node.Children != null)
+                {
+                    return node.Children.ContainsTree(id);
+                }
             }
             return false;
+        }
+
+        public static bool ContainsTreeInBsonDocument(this MongoDB.Bson.BsonArray nodes, Guid id)
+        {
+            foreach (var node in nodes)
+            {
+                if (node["_id"].AsGuid == id)
+                {
+                    return true;
+                }
+                if (node["Children"] != MongoDB.Bson.BsonNull.Value)
+                {
+                    if(node["Children"].AsBsonArray.ContainsTreeInBsonDocument(id)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public static void DeleteCategoryNodeById(this IEnumerable<TreeNode> nodes, Guid id)
+        {
+            foreach (var node in nodes)
+            {
+                if (node.Id == id)
+                {
+                    nodes.ToList().Remove(nodes.Single(i => i.Id == id));
+                    return;
+                }
+                if (node.Children != null)
+                {
+                    node.Children.DeleteCategoryNodeById(id);
+                }
+            }
+        }
+
+        public static void UpdateCategoryNodeById(this IEnumerable<TreeNode> nodes, Guid id, IEnumerable<TreeNode> newNodes)
+        {
+            foreach (var node in nodes)
+            {
+                if (node.Id == id)
+                {
+                    node.Children = newNodes.ToList();
+                    return;
+                }
+                if (node.Children != null)
+                {
+                    node.Children.DeleteCategoryNodeById(id);
+                }
+            }
         }
     }
 }

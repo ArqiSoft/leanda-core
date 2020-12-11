@@ -36,7 +36,7 @@ namespace Sds.Osdr.WebApi.IntegrationTests
                 })
             };
 
-            var response = await JaneApi.PostData("/api/categories/tree", categories);
+            var response = await JaneApi.PostData("/api/categorytrees/tree", categories);
             response.StatusCode.Should().Be(HttpStatusCode.Forbidden); 
         }
 
@@ -52,20 +52,20 @@ namespace Sds.Osdr.WebApi.IntegrationTests
                 })
             };
 
-            var response = await JaneApi.PutData($"/api/categories/tree/{CategoryId}", categories);
+            var response = await JaneApi.PutData($"/api/categorytrees/tree/{CategoryId}", categories);
             response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
 
-            response = await JaneApi.PutData($"/api/categories/tree/{CategoryId}/{Guid.NewGuid()}", categories);
+            response = await JaneApi.PutData($"/api/categorytrees/tree/{CategoryId}/{Guid.NewGuid()}", categories);
             response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         }
 
         [Fact, WebApiTrait(TraitGroup.All, TraitGroup.Categories)]
         public async Task CategoryTree_DeleteCategoryTree_ReturnsForbidden()
         {
-            var response = await JaneApi.DeleteData($"/api/categories/tree/{CategoryId}");
+            var response = await JaneApi.DeleteData($"/api/categorytrees/tree/{CategoryId}");
             response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
 
-            response = await JaneApi.DeleteData($"/api/categories/tree/{CategoryId}/{Guid.NewGuid()}");
+            response = await JaneApi.DeleteData($"/api/categorytrees/tree/{CategoryId}/{Guid.NewGuid()}");
             response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         }
 
@@ -81,9 +81,8 @@ namespace Sds.Osdr.WebApi.IntegrationTests
                 })
             };
 
-            var response = await JaneApi.PutData($"/api/categories/tree/{CategoryId}/{Guid.NewGuid()}", categories);
+            var response = await JaneApi.PutData($"/api/categorytrees/tree/{CategoryId}/{Guid.NewGuid()}", categories);
             response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         }
-
     }
 }

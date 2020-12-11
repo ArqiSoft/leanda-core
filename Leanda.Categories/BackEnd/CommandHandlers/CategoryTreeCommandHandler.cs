@@ -12,7 +12,8 @@ namespace Leanda.Categories.BackEnd.CommandHandlers
 {
     public class CategoryTreeCommandHandler : IConsumer<CreateCategoryTree>,
                                               IConsumer<UpdateCategoryTree>,
-                                              IConsumer<DeleteCategoryTree>
+                                              IConsumer<DeleteCategoryTree>,
+                                              IConsumer<DeleteCategoryTreeNode>
     {
         private readonly ISession _session;
 
@@ -43,7 +44,16 @@ namespace Leanda.Categories.BackEnd.CommandHandlers
         {
             var tree = await _session.Get<CategoryTree>(context.Message.Id);
 
-            tree.Delete(context.Message.UserId, context.Message.NodeId);
+            tree.Delete(context.Message.UserId);
+
+            await _session.Commit();
+        }
+
+        public async Task Consume(ConsumeContext<DeleteCategoryTreeNode> context)
+        {
+            var tree = await _session.Get<CategoryTree>(context.Message.Id);
+
+            tree.DeleteNode(context.Message.UserId, context.Message.NodeId);
 
             await _session.Commit();
         }

@@ -6,6 +6,7 @@ using Sds.Osdr.IntegrationTests.FluentAssersions;
 using Sds.Osdr.IntegrationTests.Traits;
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
@@ -27,7 +28,7 @@ namespace Sds.Osdr.WebApi.IntegrationTests
                 })
             };
 
-            var response = harness.JohnApi.PostData("/api/categories/tree", categories).Result;
+            var response = harness.JohnApi.PostData("/api/categorytrees/tree", categories).Result;
 
             var content = response.Content.ReadAsStringAsync().Result;
 
@@ -50,7 +51,7 @@ namespace Sds.Osdr.WebApi.IntegrationTests
         [Fact, WebApiTrait(TraitGroup.All, TraitGroup.Categories)]
         public async Task CategoryTree_CreateNewCategoryTree_BuiltExpectedDocument()
         {
-            var response = await JohnApi.GetData($"/api/categories/tree/{CategoryId}");
+            var response = await JohnApi.GetData($"/api/categorytrees/tree/{CategoryId}");
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync();
@@ -66,6 +67,13 @@ namespace Sds.Osdr.WebApi.IntegrationTests
             	'version': 1,
                 'nodes': *EXIST*
             }}");
+        }
+
+        [Fact, WebApiTrait(TraitGroup.All, TraitGroup.Categories)]
+        public async Task CategoryTree_GetNonExistantCategoryTree_ReturnsNotFoundCode()
+        {
+            var response = await JohnApi.GetData($"/api/categorytrees/tree/{Guid.NewGuid()}");
+            response.StatusCode.Should().Be(HttpStatusCode.NotFound);
         }
     }
 }

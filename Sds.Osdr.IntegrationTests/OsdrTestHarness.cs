@@ -13,6 +13,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using Nest;
+using Newtonsoft.Json.Linq;
 using Sds.CqrsLite.EventStore;
 using Sds.MassTransit.Extensions;
 using Sds.MassTransit.Observers;
@@ -27,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sds.Osdr.IntegrationTests
@@ -48,7 +51,7 @@ namespace Sds.Osdr.IntegrationTests
         public IEventStore CqrsEventStore { get { return _serviceProvider.GetService<IEventStore>(); } }
         public EventStore.IEventStore EventStore { get { return _serviceProvider.GetService<EventStore.IEventStore>(); } }
         public IMongoDatabase MongoDb { get { return _serviceProvider.GetService<IMongoDatabase>(); } }
-
+        public IElasticClient ElasticClient { get { return _serviceProvider.GetService<IElasticClient>(); } }
         public IBusControl BusControl { get { return _serviceProvider.GetService<IBusControl>(); } }
 
         private IDictionary<Guid, IList<Guid>> ProcessedRecords { get; } = new Dictionary<Guid, IList<Guid>>();
@@ -92,6 +95,10 @@ namespace Sds.Osdr.IntegrationTests
 
             services.AddSingleton(new MongoClient(mongoUrl));
             services.AddScoped(service => service.GetService<MongoClient>().GetDatabase(mongoUrl.DatabaseName));
+
+            var settings = new ConnectionSettings(new Uri(Environment.ExpandEnvironmentVariables(configuration["ElasticSearch:ConnectionString"])));
+            settings.DefaultFieldNameInferrer(f => f);
+            services.AddSingleton<IElasticClient>(new ElasticClient(settings));
 
             services.AddTransient<IBlobStorage, GridFsStorage>(x =>
             {
@@ -200,6 +207,8 @@ namespace Sds.Osdr.IntegrationTests
                     e.Handler<Leanda.Categories.Domain.Events.CategoryTreeUpdatedPersisted>(context => { Received.Add(context); return Task.CompletedTask; });
 
                     e.Handler<Leanda.Categories.Domain.Events.CategoryTreeDeletePersisted>(context => { Received.Add(context); return Task.CompletedTask; });
+
+                    e.Handler<Leanda.Categories.Domain.Events.CategoryTreeNodeDeletePersisted>(context => { Received.Add(context); return Task.CompletedTask; });
                 });
 
                 x.UseConcurrencyLimit(mtSettings.ConcurrencyLimit);
@@ -344,6 +353,44 @@ namespace Sds.Osdr.IntegrationTests
                 .Select(id => Session.Get<File>(id).Result)
                 .Where(f => !types.Contains(f.Type))
                 .Select(f => f.Id);
+        }
+
+        public void WaitWhileCategoryIndexed(string categoryId)
+        {
+            var elasticSearchNodes = new List<JObject>();
+            for (int i = 0; i < 100; i++)
+            {
+                var result = ElasticClient.Search<dynamic>(s => s
+                    .Index("categories")
+                    .Type("category")
+                    .Query(q => q.QueryString(qs => qs.Query(categoryId))));
+                var hits = result.Hits;
+                if (hits.Any())
+                {
+                    return;
+                }
+                Thread.Sleep(100);
+            }
+            return;
+        }
+
+        public void WaitWhileCategoryDeleted(string categoryId)
+        {
+            var elasticSearchNodes = new List<JObject>();
+            for (int i = 0; i < 100; i++)
+            {
+                var result = ElasticClient.Search<dynamic>(s => s
+                    .Index("categories")
+                    .Type("category")
+                    .Query(q => q.QueryString(qs => qs.Query(categoryId))));
+                var hits = result.Hits.FirstOrDefault();
+                if (hits == null)
+                {
+                    return;
+                }
+                Thread.Sleep(100);
+            }
+            return;
         }
 
         public virtual void Dispose()

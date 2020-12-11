@@ -107,7 +107,7 @@ namespace Sds.Osdr.EndToEndTests
             fileNode["images"].Should().NotBeNull();
             fileNode["images"].Should().HaveCount(1);
         }
-        [Fact, WebApiTrait(TraitGroup.All, TraitGroup.Chemical)]
+        [Fact(Skip ="Unstable"), WebApiTrait(TraitGroup.All, TraitGroup.Chemical)]
         public async Task ChemicalProcessing_ValidCdx_GenerateExpectedRecordNode()
         {
             var recordResponse = await JohnApi.GetNodesById(FileId);

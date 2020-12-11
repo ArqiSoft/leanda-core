@@ -194,7 +194,7 @@ namespace Sds.Osdr.EndToEndTests
             recordEntity["images"].Should().NotBeNull();
             recordEntity["images"].Should().HaveCount(1);
         }
-        [Fact, WebApiTrait(TraitGroup.All, TraitGroup.Chemical)]
+        [Fact(Skip ="Ustable"), WebApiTrait(TraitGroup.All, TraitGroup.Chemical)]
         public async Task ChemicalProcessing_ValidMol_GenerateExpectedRecordNode()
         {
             var recordResponse = await JohnApi.GetNodesById(FileId);

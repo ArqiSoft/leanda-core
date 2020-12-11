@@ -313,7 +313,8 @@ namespace Sds.Osdr.WebApi
             //    appBuilder.ServerFeatures.Get<IHttpMaxRequestBodySizeFeature>().MaxRequestBodySize = fvcSettings.MaxFileSize;
             //});
 
-            var routePrefixes = new[] { "/api/categories", "/api/entities", "/api/nodes", "/api/usernotifications", "/api/public", "/api/machinelearning/predictions" };
+            var routePrefixes = new[] { "/api/entities", "/api/nodes", "/api/usernotifications", "/api/public", "/api/machinelearning/predictions",
+                    "/api/categoryentities", "/api/categorytrees"};
             var binaryDataEndpints = new[] { "/blobs/", "/images/", ".zip" };
             app.UseWhen(context =>
                     (routePrefixes.Any(context.Request.Path.Value.ToLower().Contains) && !binaryDataEndpints.Any(context.Request.Path.Value.ToLower().Contains)),

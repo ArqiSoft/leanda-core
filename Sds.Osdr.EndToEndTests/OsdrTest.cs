@@ -1,4 +1,5 @@
-﻿using Sds.Osdr.IntegrationTests;
+﻿using Nest;
+using Sds.Osdr.IntegrationTests;
 using Sds.Osdr.WebApi.IntegrationTests.EndPoints;
 using Serilog;
 using Serilog.Events;
@@ -30,7 +31,7 @@ namespace Sds.Osdr.EndToEndTests
         public OsdrWebClient JohnApi => WebFixture.JohnApi;
         public OsdrWebClient JaneApi => WebFixture.JaneApi;
         public OsdrWebClient UnauthorizedApi => WebFixture.UnauthorizedApi;
-
+        public IElasticClient ElasticClient => WebFixture.ElasticClient;
         protected OsdrTestHarness WebFixture => Harness as OsdrTestHarness;
     }
 }

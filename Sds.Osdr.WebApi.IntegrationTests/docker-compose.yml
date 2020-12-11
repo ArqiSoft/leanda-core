@@ -66,6 +66,18 @@ services:
     depends_on:
       - postgres
 
+  elasticsearch:
+    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.8.4
+    environment:
+      - discovery.type=single-node
+    ports:
+      - "9201:9201"
+      - "9200:9200"
+      - "9301:9300"
+    networks:
+      - leanda-net
+
   core-backend:
     container_name: core-backend
     image: leanda/core-backend:${TAG_VERSION-latest}
@@ -155,7 +167,7 @@ services:
       - OSDR_MONGO_DB=mongodb://mongo:27017/leanda
       - OSDR_RABBIT_MQ=rabbitmq://guest:guest@rabbitmq:5672/leanda
       - OSDR_EVENT_STORE=ConnectTo=tcp://admin:changeit@eventstore:1113
-      #- OSDR_ES=http://elasticsearch:9200
+      - OSDR_ES=http://elasticsearch:9200
       - SWAGGER_BASEPATH=/osdr/v1
       - OSDR_LOG_LEVEL=${OSDR_LOG_LEVEL}
     command: ./wait-for-it.sh rabbitmq:15672 -t 60 -- ./wait-for-it.sh keycloak:8080 -t 60 -- ./Sds.Osdr.WebApi
@@ -191,6 +203,12 @@ services:
       - leanda-net
     ports:
       - "18006:18006"
+    depends_on:
+      - keycloak
+      - rabbitmq
+      - eventstore
+      - redis
+      - mongo
 
   integration:
     container_name: webapi-integration
@@ -200,6 +218,7 @@ services:
       - IDENTITY_SERVER_URL=http://keycloak:8080/auth/realms/OSDR
       - OSDR_BLOB_STORAGE_API=http://blob-storage-api:18006/api/blobs/
       - OSDR_REDIS=redis
+      - OSDR_ES=http://elasticsearch:9200
       - OSDR_LOG_FOLDER=/logs
       - OSDR_MONGO_DB=mongodb://mongo:27017/leanda
       - OSDR_GRID_FS=mongodb://mongo:27017/leanda
@@ -207,7 +226,7 @@ services:
       - OSDR_EVENT_STORE=ConnectTo=tcp://admin:changeit@eventstore:1113
       - OSDR_WEB_API=http://core-web-api:18006
       - OSDR_LOG_LEVEL=${OSDR_LOG_LEVEL}
-    # command: ./wait-for-it.sh http://core-web-api:18006 -t 60 -- dotnet vstest ./Sds.Osdr.WebApi.IntegrationTests.dll /logger:console /Tests:PdfUpload_ValidPdf_GenerateExpectedFileEntity
+    # command: ./wait-for-it.sh http://core-web-api:18006 -t 60 -- dotnet vstest ./Sds.Osdr.WebApi.IntegrationTests.dll /logger:console /Tests:AddOneCategoryToEntity
     command: ./wait-for-it.sh http://core-web-api:18006 -t 60 -- dotnet vstest ./Sds.Osdr.WebApi.IntegrationTests.dll /logger:console;verbosity="normal"
     #command: ./wait-for-it.sh http://osdr-service-web-api:18006 -t 60 -- dotnet vstest ./Sds.Osdr.WebApi.IntegrationTests.dll /logger:"trx;LogFileName=webapi-integrationtests-results-${BUILD_NUMBER}.xml" /ResultsDirectory:/results
     volumes:

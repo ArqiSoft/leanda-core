@@ -50,8 +50,15 @@ namespace Leanda.Categories.Domain
             }
             else
             {
-                // TODO: find node by parentId and replace children
+                Nodes.UpdateCategoryNodeById(e.Id, e.Nodes);
             }
+        }
+
+        private void Apply(CategoryTreeNodeDeleted e)
+        {
+            UpdatedBy = e.UserId;
+            UpdatedDateTime = e.TimeStamp;
+            Nodes.DeleteCategoryNodeById(e.Id);
         }
 
         protected CategoryTree()
@@ -69,9 +76,14 @@ namespace Leanda.Categories.Domain
             ApplyChange(new CategoryTreeUpdated(Id, userId, parentId, nodes));
         }
 
-        public void Delete(Guid userId, Guid? nodeId)
+        public void DeleteNode(Guid userId, Guid nodeId)
         {
-            ApplyChange(new CategoryTreeDeleted(Id, userId, nodeId));
+            ApplyChange(new CategoryTreeNodeDeleted(Id, userId, nodeId));
+        }
+
+        public void Delete(Guid userId)
+        {
+            ApplyChange(new CategoryTreeDeleted(Id, userId));
         }
     }
 }
