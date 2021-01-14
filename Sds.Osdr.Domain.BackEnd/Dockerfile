@@ -1,5 +1,5 @@
 # Use SDK image to build solution
-FROM microsoft/dotnet:2.1-sdk AS build-env
+FROM mcr.microsoft.com/dotnet/sdk:3.1 AS build-env
 
 ARG RID=linux-x64
 
@@ -47,7 +47,7 @@ COPY Sds.Osdr.Domain.BackEnd Sds.Osdr.Domain.BackEnd
 RUN dotnet publish Sds.Osdr.Domain.BackEnd/Sds.Osdr.Domain.BackEnd.csproj -r $RID -c Release -o /dist
 
 # Build runtime image
-FROM microsoft/dotnet:2.1-runtime-deps
+FROM mcr.microsoft.com/dotnet/runtime-deps:3.1
 
 LABEL maintainer="info@arqisoft.com"
 

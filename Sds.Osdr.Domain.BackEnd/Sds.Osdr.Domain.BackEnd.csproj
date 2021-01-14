@@ -3,7 +3,7 @@
   <PropertyGroup>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <Company>Science Data Software</Company>
     <Product>Open Science Data Repository</Product>
     <Copyright>Copyright © 2017 Science Data Software</Copyright>
@@ -21,9 +21,9 @@
     <PackageReference Include="MassTransit.SerilogIntegration" Version="5.1.4" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="2.1.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.1.1" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.0.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="2.1.0" />
-    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="2.1.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.11" />
+    <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="3.1.6" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="3.1.11" />
     <PackageReference Include="PeterKottas.DotNetCore.WindowsService" Version="2.0.6" />
     <PackageReference Include="Sds.ChemicalExport.Domain" Version="0.14.0-develop" />
     <PackageReference Include="Sds.CqrsLite.EventStore" Version="2.0.4" />

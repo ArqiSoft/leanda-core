@@ -1,4 +1,4 @@
-FROM microsoft/dotnet:2.1-sdk AS build-env
+FROM mcr.microsoft.com/dotnet/sdk:3.1 AS build-env
 
 ARG RID=linux-x64
 
@@ -50,7 +50,7 @@ COPY Sds.Osdr.EndToEndTests Sds.Osdr.EndToEndTests
 RUN dotnet publish Sds.Osdr.EndToEndTests/Sds.Osdr.EndToEndTests.csproj -r $RID -c Release -o /dist
 
 # Build runtime image
-FROM microsoft/dotnet:2.1-sdk
+FROM mcr.microsoft.com/dotnet/sdk:3.1
 
 LABEL maintainer="pshenichnov@gmail.com"
 

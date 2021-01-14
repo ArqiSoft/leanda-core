@@ -16,7 +16,7 @@
     <Product>Open Science Data Repository</Product>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="MongoDB.Driver" Version="2.7.2" />
+    <PackageReference Include="MongoDB.Driver" Version="2.10.4" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Sds.Osdr.Domain\Sds.Osdr.Domain.csproj" />

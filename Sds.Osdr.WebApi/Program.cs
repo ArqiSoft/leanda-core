@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using System.IO;
+using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace Sds.Osdr.WebApi
 {
@@ -19,6 +21,13 @@ namespace Sds.Osdr.WebApi
                 .UseConfiguration(configuration)
                 .UseIISIntegration()
                 .UseStartup<Startup>()
+                .ConfigureLogging((hostingContext, logging) =>
+                {
+                    logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
+                    logging.AddConsole();
+                    logging.AddDebug();
+                    logging.AddSerilog();
+                })
                 .Build();
 
             host.Run();

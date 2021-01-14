@@ -205,18 +205,20 @@ namespace Sds.Osdr.WebApi
             services.AddSingleton<IUserIdProvider, OsdrUserIdProvider>();
 
             // Add framework services.
+            services.AddCors();
             services.AddMvc()
-                .AddJsonOptions(opt =>
+                .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
+                .AddNewtonsoftJson(opt =>
                 {
                     opt.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
                     opt.SerializerSettings.Formatting = Formatting.Indented;
                     opt.SerializerSettings.Converters.Add(new StringEnumConverter
                     {
-                        CamelCaseText = false
+                        NamingStrategy = new DefaultNamingStrategy()
                     });
                 });
 
-            services.AddSignalR().AddHubOptions<OrganizeHub>(options =>
+            services.AddSignalR().AddJsonProtocol().AddHubOptions<OrganizeHub>(options =>
             {
                 options.EnableDetailedErrors = true;
             });
@@ -271,13 +273,8 @@ namespace Sds.Osdr.WebApi
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, IApplicationLifetime appLifetime, IServiceProvider serviceProvider)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime appLifetime, IServiceProvider serviceProvider)
         {
-
-            loggerFactory.AddConsole(Configuration.GetSection("Logging"));
-            loggerFactory.AddDebug();
-            loggerFactory.AddSerilog();
-
             appLifetime.ApplicationStopped.Register(Log.CloseAndFlush);
 
             if (env.IsDevelopment())
@@ -301,11 +298,12 @@ namespace Sds.Osdr.WebApi
             app.UseStaticFiles();
             app.UseAuthentication();
             app.UseWebSockets();
-            app.UseCors(
-                builder => builder.AllowAnyOrigin()
-                    .AllowAnyHeader()
-                    .AllowAnyMethod()
-                    .AllowCredentials()).UseWebSockets();
+            app.UseCors(x => x
+                .SetIsOriginAllowed(origin => true)
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials()
+                );
 
             //app.UseWhen(context => context.Request.Path.StartsWithSegments("/api/machinelearning/features"), appBuilder =>
             //{
