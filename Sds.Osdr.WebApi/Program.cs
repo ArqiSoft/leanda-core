@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using System.IO;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
 
@@ -15,19 +16,21 @@ namespace Sds.Osdr.WebApi
                 .AddCommandLine(args)
                 .Build();
 
-            var host = new WebHostBuilder()
-                .UseKestrel()
+            var host = new HostBuilder()
                 .UseContentRoot(Directory.GetCurrentDirectory())
-                .UseConfiguration(configuration)
-                .UseIISIntegration()
-                .UseStartup<Startup>()
-                .ConfigureLogging((hostingContext, logging) =>
-                {
-                    logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
-                    logging.AddConsole();
-                    logging.AddDebug();
-                    logging.AddSerilog();
-                })
+                .ConfigureWebHost(webBuilder =>
+                    webBuilder
+                        .UseKestrel()
+                        .UseConfiguration(configuration)
+                        .UseIISIntegration()
+                        .UseStartup<Startup>()
+                        .ConfigureLogging((hostingContext, logging) =>
+                        {
+                            logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
+                            logging.AddConsole();
+                            logging.AddDebug();
+                            logging.AddSerilog();
+                        }))
                 .Build();
 
             host.Run();

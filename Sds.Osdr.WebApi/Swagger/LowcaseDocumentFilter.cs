@@ -1,17 +1,17 @@
 ﻿using System.Collections.Generic;
-using Swashbuckle.AspNetCore.Swagger;
+using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Sds.Osdr.WebApi.Swagger
 {
     public class LowercaseDocumentFilter : IDocumentFilter
     {
-        public void Apply(SwaggerDocument swaggerDoc, DocumentFilterContext context)
+        public void Apply(OpenApiDocument swaggerDoc, DocumentFilterContext context)
         {
             var paths = swaggerDoc.Paths;
 
             //	generate the new keys
-            var newPaths = new Dictionary<string, PathItem>();
+            var newPaths = new Dictionary<string, OpenApiPathItem>();
             var keysForRemove = new List<string>();
             foreach (var path in paths)
             {

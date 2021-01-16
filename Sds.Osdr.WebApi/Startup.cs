@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.PlatformAbstractions;
 using MongoDB.Driver;
@@ -30,9 +30,11 @@ using Sds.Storage.Blob.GridFs;
 using Serilog;
 using Swashbuckle.AspNetCore.Swagger;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using Sds.Osdr.WebApi.DataProviders;
 using Sds.EventStore;
 using Newtonsoft.Json.Converters;
@@ -46,6 +48,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.SignalR;
 using System.Net.WebSockets;
+using System.Text;
 using System.Threading;
 using Microsoft.AspNetCore.Http.Features;
 using CQRSlite.Events;
@@ -53,12 +56,13 @@ using CQRSlite.Domain;
 using ISession = CQRSlite.Domain.ISession;
 using Sds.CqrsLite.EventStore;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.OpenApi.Models;
 
 namespace Sds.Osdr.WebApi
 {
     public class Startup
     {
-        public Startup(IHostingEnvironment env)
+        public Startup(IWebHostEnvironment env)
         {
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
@@ -186,28 +190,37 @@ namespace Sds.Osdr.WebApi
             // Register the Swagger generator, defining one or more Swagger documents
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new Info { Title = "OSDR API", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "OSDR API", Version = "v1" });
 
                 //Set the comments path for the swagger json and ui.
                 var basePath = PlatformServices.Default.Application.ApplicationBasePath;
                 var xmlPath = Path.Combine(basePath, "Osdr.xml");
                 c.IncludeXmlComments(xmlPath);
                 c.DocumentFilter<LowercaseDocumentFilter>();
-                c.AddSecurityDefinition("Bearer", new ApiKeyScheme()
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
                 {
                     Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
                     Name = "Authorization",
-                    In = "header",
-                    Type = "apiKey"
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.ApiKey
                 });
-                c.OperationFilter<SecurityRequirementsOperationFilter>();
+                // c.OperationFilter<SecurityRequirementsOperationFilter>();
+                
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
+                        },
+                        new List<string>()
+                    }
+                });
             });
             services.AddSingleton<IUserIdProvider, OsdrUserIdProvider>();
 
             // Add framework services.
-            services.AddCors();
-            services.AddMvc()
-                .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
+            services.AddControllers()
                 .AddNewtonsoftJson(opt =>
                 {
                     opt.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
@@ -218,7 +231,7 @@ namespace Sds.Osdr.WebApi
                     });
                 });
 
-            services.AddSignalR().AddJsonProtocol().AddHubOptions<OrganizeHub>(options =>
+            services.AddSignalR().AddNewtonsoftJsonProtocol().AddHubOptions<OrganizeHub>(options =>
             {
                 options.EnableDetailedErrors = true;
             });
@@ -273,7 +286,7 @@ namespace Sds.Osdr.WebApi
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime appLifetime, IServiceProvider serviceProvider)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHostApplicationLifetime appLifetime)
         {
             appLifetime.ApplicationStopped.Register(Log.CloseAndFlush);
 
@@ -297,13 +310,10 @@ namespace Sds.Osdr.WebApi
 
             app.UseStaticFiles();
             app.UseAuthentication();
+            app.UseAuthorization();
             app.UseWebSockets();
-            app.UseCors(x => x
-                .SetIsOriginAllowed(origin => true)
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials()
-                );
+            app.UseCors("default");
+            // app.UseCors("AllowAnyOrigin");
 
             //app.UseWhen(context => context.Request.Path.StartsWithSegments("/api/machinelearning/features"), appBuilder =>
             //{
@@ -321,22 +331,25 @@ namespace Sds.Osdr.WebApi
                     mapApp.Use(async (context, next) =>
                     {
                         var originalBody = context.Response.Body;
-
+                        
                         using (var newBody = new MemoryStream())
                         {
                             // We set the response body to our stream so we can read after the chain of middlewares have been called.
                             context.Response.Body = newBody;
 
                             await next();
-
-                            newBody.Seek(0, SeekOrigin.Begin);
-
-                            string newContent = new StreamReader(newBody).ReadToEnd().Replace("\"_id\":", "\"id\":");
-
+            
                             context.Response.Body = originalBody;
 
-                            // Send our modified content to the response body.
-                            await context.Response.WriteAsync(newContent);
+                            newBody.Seek(0, SeekOrigin.Begin);
+                            var newContent = (await new StreamReader(newBody).ReadToEndAsync()).Replace("\"_id\":", "\"id\":");
+            
+                            var fixedBody = new MemoryStream();
+                            var contentBytes = Encoding.UTF8.GetBytes(newContent);
+                            fixedBody.Write(contentBytes, 0, contentBytes.Length);
+
+                            context.Response.ContentLength = fixedBody.Length;
+                            await context.Response.Body.WriteAsync(fixedBody.ToArray());
                         }
                     });
                 });
@@ -346,19 +359,24 @@ namespace Sds.Osdr.WebApi
             {
                 string basePath = Environment.GetEnvironmentVariable("SWAGGER_BASEPATH");
                 if (!string.IsNullOrEmpty(basePath))
-                    d.BasePath = basePath;
+                {
+                    d.Servers = new List<OpenApiServer> { new OpenApiServer { Url = $"{r.Scheme}://{r.Host.Value}{basePath}" } };
+                }
             }));
 
             // Enable middleware to serve swagger-ui (HTML, JS, CSS etc.), specifying the Swagger JSON endpoint.
             app.UseSwaggerUI(c => c.SwaggerEndpoint("v1/swagger.json", "OSDR API V1"));
 
-            app.UseMvc();
+            app.UseRouting();
 
-            app.UseSignalR(routes =>
+            app.UseAuthorization();
+            
+            app.UseEndpoints(endpoints =>
             {
-                routes.MapHub<OrganizeHub>("/signalr");
+                endpoints.MapHub<OrganizeHub>("/signalr");
+                endpoints.MapControllers();
             });
-
+                
             app.Use(async (context, next) =>
             {
                 if (context.Request.Path == "/signalr")
