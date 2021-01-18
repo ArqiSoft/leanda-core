@@ -1,0 +1,165 @@
+version: '3.4'
+
+services:
+  eventstore:
+    image: eventstore/eventstore:release-4.0.2
+    ports:
+      - "2113:2113"
+      - "1113:1113"
+    environment:
+      - RUN_PROJECTIONS=All
+    networks:
+      - leanda-net
+
+  redis:
+    image: redis:4-alpine
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    networks:
+      - leanda-net
+
+  rabbitmq:
+    image: leanda/rabbitmq
+    hostname: "leanda"
+    environment:
+      - RABBITMQ_DEFAULT_VHOST=leanda
+    ports:
+      - "8282:15672"
+      - "5672:5672"
+    networks:
+      - leanda-net
+
+  mongo:
+    image: mongo:3.6
+    ports:
+      - "27017:27017"
+    networks:
+      - leanda-net
+
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+      POSTGRES_DATABASE: keycloak
+      POSTGRES_ROOT_PASSWORD: keycloak
+      pgdata: data-pstgresql
+    networks:
+      - leanda-net
+
+  keycloak:
+    build: KeyCloak
+    environment:
+      DB_VENDOR: POSTGRES
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: admin
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+      POSTGRES_PORT_5432_TCP_ADDR: postgres
+      POSTGRES_DATABASE: keycloak
+      JDBC_PARAMS: 'connectTimeout=30'
+    ports:
+      - '8080:8080'
+    networks:
+      - leanda-net
+    depends_on:
+      - postgres
+
+  elasticsearch:
+    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.8.4
+    environment:
+      - discovery.type=single-node
+    ports:
+      - "9201:9201"
+      - "9200:9200"
+      - "9301:9300"
+    networks:
+      - leanda-net      
+
+  core-lite:
+    container_name: core-lite
+    image: leanda/core-lite:${TAG_VERSION-latest}
+    entrypoint: /bin/bash
+    environment:
+      - IDENTITY_SERVER_URL=http://keycloak:8080/auth/realms/OSDR
+      - OSDR_REDIS=redis
+      - OSDR_LOG_FOLDER=/logs
+      - OSDR_MONGO_DB=mongodb://mongo:27017/leanda
+      - OSDR_RABBIT_MQ=rabbitmq://guest:guest@rabbitmq:5672/leanda
+      - OSDR_EVENT_STORE=ConnectTo=tcp://admin:changeit@eventstore:1113
+      - OSDR_ES=http://elasticsearch:9200
+      - SWAGGER_BASEPATH=/osdr/v1
+      - OSDR_LOG_LEVEL=${OSDR_LOG_LEVEL}
+    #command: ./wait-for-it.sh rabbitmq:5672 -t 60 -- ./wait-for-it.sh elasticsearch:9200 -t 60 -- ./core-lite-startup.sh
+    command: ./wait-for-it.sh rabbitmq:5672 -t 60 -- ./wait-for-it.sh elasticsearch:9200 -t 60 -- supervisord -n
+    volumes:
+      - ${OSDR_LOG_FOLDER}:/logs
+    networks:
+      - leanda-net
+    ports:
+      - "28611:18006"
+    depends_on:
+      - keycloak
+      - rabbitmq
+      - eventstore
+      - redis
+      - mongo
+
+  blob-storage-api:
+    container_name: blob-storage-api
+    image: leanda/blob-storage-webapi
+    entrypoint: /bin/bash
+    environment:
+      - IDENTITY_SERVER_URL=http://keycloak:8080/auth/realms/OSDR
+      - OSDR_LOG_FOLDER=/logs
+      - OSDR_MONGO_DB=mongodb://mongo:27017/leanda
+      - OSDR_RABBIT_MQ=rabbitmq://guest:guest@rabbitmq:5672/leanda
+      - SWAGGER_BASEPATH=/blob/v1
+      - OSDR_LOG_LEVEL=${OSDR_LOG_LEVEL}
+      - MAX_BLOB_SIZE=419430400
+    command: ./wait-for-it.sh rabbitmq:15672 -t 60 -- ./wait-for-it.sh keycloak:8080 -t 60 -- ./Sds.Storage.Blob.WebApi
+    volumes:
+      - ${OSDR_LOG_FOLDER}:/logs
+    networks:
+      - leanda-net
+    ports:
+      - "18006:18006"
+    depends_on:
+      - keycloak
+      - rabbitmq
+      - eventstore
+      - redis
+      - mongo
+
+  integration:
+    container_name: webapi-integration
+    image: leanda/webapi-integration:${TAG_VERSION-latest}
+    entrypoint: /bin/bash
+    environment:
+      - IDENTITY_SERVER_URL=http://keycloak:8080/auth/realms/OSDR
+      - OSDR_BLOB_STORAGE_API=http://blob-storage-api:18006/api/blobs/
+      - OSDR_REDIS=redis
+      - OSDR_ES=http://elasticsearch:9200
+      - OSDR_LOG_FOLDER=/logs
+      - OSDR_MONGO_DB=mongodb://mongo:27017/leanda
+      - OSDR_GRID_FS=mongodb://mongo:27017/leanda
+      - OSDR_RABBIT_MQ=rabbitmq://guest:guest@rabbitmq:5672/leanda
+      - OSDR_EVENT_STORE=ConnectTo=tcp://admin:changeit@eventstore:1113
+      - OSDR_WEB_API=http://core-lite:18006
+      - OSDR_LOG_LEVEL=${OSDR_LOG_LEVEL}
+    # command: ./wait-for-it.sh http://core-web-api:18006 -t 60 -- dotnet vstest ./Sds.Osdr.WebApi.IntegrationTests.dll /logger:console /Tests:AddOneCategoryToEntity
+    command: ./wait-for-it.sh http://core-lite:18006 -t 60 -- dotnet vstest ./Sds.Osdr.WebApi.IntegrationTests.dll /logger:console;verbosity="normal"
+    #command: ./wait-for-it.sh http://osdr-service-web-api:18006 -t 60 -- dotnet vstest ./Sds.Osdr.WebApi.IntegrationTests.dll /logger:"trx;LogFileName=webapi-integrationtests-results-${BUILD_NUMBER}.xml" /ResultsDirectory:/results
+    volumes:
+      - ${OSDR_LOG_FOLDER}:/logs
+      - /results:/results
+    networks:
+      - leanda-net
+    depends_on:
+      - core-lite
+     
+
+networks:
+  leanda-net:

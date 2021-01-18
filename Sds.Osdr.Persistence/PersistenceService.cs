@@ -37,7 +37,7 @@ namespace Sds.Osdr.Persistence
         public void Start()
         {
             var builder = new ConfigurationBuilder()
-                 .AddJsonFile("appsettings.json")
+                 .AddJsonFile("appsettings.Persistence.json")
                  .AddEnvironmentVariables();
 
             Configuration = builder.Build();

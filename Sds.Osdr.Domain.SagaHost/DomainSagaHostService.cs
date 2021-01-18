@@ -43,7 +43,7 @@ namespace Sds.Osdr.Domain.SagaHost
             StartBase();
 
             var builder = new ConfigurationBuilder()
-                 .AddJsonFile("appsettings.json", true, true)
+                 .AddJsonFile("appsettings.SagaHost.json", true, true)
                  .AddEnvironmentVariables();
 
             Configuration = builder.Build();

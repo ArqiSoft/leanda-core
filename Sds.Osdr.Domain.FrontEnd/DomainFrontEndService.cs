@@ -43,7 +43,7 @@ namespace Sds.Osdr.Domain.FrontEnd
             StartBase();
 
             var builder = new ConfigurationBuilder()
-                 .AddJsonFile("appsettings.json")
+                 .AddJsonFile("appsettings.FrontEnd.json")
                  .AddEnvironmentVariables();
 
             Configuration = builder.Build();

@@ -1,0 +1,114 @@
+version: '3'
+
+services:
+    eventstore:
+        image: eventstore/eventstore:release-4.0.2
+        container_name: eventstore
+        ports:
+        - "2113:2113"
+        - "1113:1113"
+        environment:
+        - RUN_PROJECTIONS=All
+        volumes:
+        - data-eventstore:/var/lib/eventstore
+        networks:
+        - leanda-ext
+
+    redis:
+        image: redis:4-alpine
+        container_name: redis
+        command: redis-server --appendonly yes
+        ports:
+        - "6379:6379"
+        volumes:
+        - data-redis:/data
+        networks:
+        - leanda-ext
+
+    rabbitmq:
+        image: leanda/rabbitmq
+        container_name: rabbitmq
+        hostname: "rabbitmq-dev"
+        environment:
+        - RABBITMQ_DEFAULT_VHOST=osdr_dev
+        ports:
+        - "8282:15672"
+        - "5671:5671"
+        - "5672:5672"
+        volumes:
+        - data-rabbitmq:/var/lib/rabbitmq
+        networks:
+        - leanda-ext
+
+    mongo:
+        image: mongo:3.6
+        container_name: mongo
+        ports:
+        - "27017:27017"
+        volumes:
+        - data-mongo-config:/data/configdb
+        - data-mongo-data:/data/db
+        networks:
+        - leanda-ext
+
+    elasticsearch:
+        image: leanda/elasticsearch
+        container_name: elasticsearch
+        environment:
+        - discovery.type=single-node
+        #- "ES_JAVA_OPTS=-Xms8g -Xmx8g"
+        volumes:
+        - data-elasticsearch:/usr/share/elasticsearch/data
+        ports:
+        - "9201:9201"
+        - "9200:9200"
+        - "9301:9300"
+        networks:
+        - leanda-ext
+
+    core-lite:
+        container_name: core-lite
+        image: leanda/core-lite:${TAG_VERSION-latest}
+        environment:
+        #- IDENTITY_SERVER_URL=${IDENTITY_SERVER_URL}
+        - IDENTITY_SERVER_URL=http://keycloak:8080/auth/realms/OSDR
+        - OSDR_REDIS=redis
+        - OSDR_LOG_FOLDER=/logs
+        - OSDR_MONGO_DB=mongodb://mongo:27017/osdr_dev
+        - OSDR_RABBIT_MQ=rabbitmq://guest:guest@rabbitmq:5672/osdr_dev
+        - OSDR_EVENT_STORE=ConnectTo=tcp://admin:changeit@eventstore:1113
+        - OSDR_ES=http://elasticsearch:9200
+        # - SWAGGER_BASEPATH=/osdr/v1
+        - OSDR_LOG_LEVEL=${OSDR_LOG_LEVEL}
+        command: ./wait-for-it.sh rabbitmq:5672 -t 60 -- ./wait-for-it.sh elasticsearch:9200 -t 60 -- ./core-lite-startup.sh
+        volumes:
+        - ${OSDR_LOG_FOLDER}:/logs
+        networks:
+        - leanda-ext
+        ports:
+        - "28611:18006"
+        - "11030:11030"
+        - "11020:11020"
+        - "11010:11010"
+        - "11000:11000"
+        depends_on:
+        - elasticsearch
+        - rabbitmq
+        - eventstore
+        - redis
+        - mongo
+
+    
+volumes:
+    data-eventstore:
+    data-redis:
+    data-rabbitmq:
+    data-elasticsearch:
+    data-mongo-config:
+    data-mongo-data:
+    data-pstgresql:
+
+networks:
+    leanda-ext:
+        external:
+            name: leanda-net
