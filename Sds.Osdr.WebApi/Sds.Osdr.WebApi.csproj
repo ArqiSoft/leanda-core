@@ -75,12 +75,6 @@
     <ProjectReference Include="..\Sds.Osdr.WebPage\Sds.Osdr.WebPage.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Content Update="appsettings.Development.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Update="appsettings.IntegrationTest.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Update="appsettings.WebApi.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
