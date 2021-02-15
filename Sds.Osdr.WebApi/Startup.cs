@@ -128,7 +128,16 @@ namespace Sds.Osdr.WebApi
 
             services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.AddScoped<IUrlHelper, UrlHelper>(factory => new UrlHelper(factory.GetService<IActionContextAccessor>().ActionContext));
+            //services.AddScoped<IUrlHelper, UrlHelper>(factory => new UrlHelper(factory.GetService<IActionContextAccessor>().ActionContext));
+
+            services.AddScoped<IUrlHelper>(x => {
+                var actionContext = x.GetRequiredService<IActionContextAccessor>().ActionContext;
+                var factory = x.GetRequiredService<IUrlHelperFactory>();
+                return factory.GetUrlHelper(actionContext);
+            });
+
+
+
 
             services.Configure<SingleStructurePredictionSettings>(Configuration.GetSection("SingleStructurePredictionSettings"));
             services.Configure<FeatureVectorCalculatorSettings>(Configuration.GetSection("FeatureVectorCalculatorSettings"));
