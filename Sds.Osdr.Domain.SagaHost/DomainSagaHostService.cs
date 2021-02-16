@@ -73,18 +73,18 @@ namespace Sds.Osdr.Domain.SagaHost
             var assemblies = new Assembly[]
             {
                 Assembly.LoadFrom("Sds.Osdr.Generic.dll"),
-                Assembly.LoadFrom("Sds.Osdr.RecordsFile.dll"),
-                Assembly.LoadFrom("Sds.Osdr.Chemicals.dll"),
-                Assembly.LoadFrom("Sds.Osdr.Crystals.dll"),
-                Assembly.LoadFrom("Sds.Osdr.Reactions.dll"),
-                Assembly.LoadFrom("Sds.Osdr.Spectra.dll"),
+                //Assembly.LoadFrom("Sds.Osdr.RecordsFile.dll"),
+                //Assembly.LoadFrom("Sds.Osdr.Chemicals.dll"),
+                //Assembly.LoadFrom("Sds.Osdr.Crystals.dll"),
+                //Assembly.LoadFrom("Sds.Osdr.Reactions.dll"),
+                //Assembly.LoadFrom("Sds.Osdr.Spectra.dll"),
                 Assembly.LoadFrom("Sds.Osdr.Pdf.dll"),
                 Assembly.LoadFrom("Sds.Osdr.Images.dll"),
                 Assembly.LoadFrom("Sds.Osdr.Office.dll"),
                 Assembly.LoadFrom("Sds.Osdr.Tabular.dll"),
-                Assembly.LoadFrom("Sds.Osdr.MachineLearning.dll"),
-                Assembly.LoadFrom("Sds.Osdr.WebPage.dll"),
-                Assembly.LoadFrom("Leanda.Microscopy.dll"),
+                //Assembly.LoadFrom("Sds.Osdr.MachineLearning.dll"),
+                //Assembly.LoadFrom("Sds.Osdr.WebPage.dll"),
+                //Assembly.LoadFrom("Leanda.Microscopy.dll"),
             };
 
             Log.Information($"Registered modules:");
