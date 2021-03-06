@@ -88,6 +88,15 @@ namespace Sds.Osdr.WebApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors(options =>
+            {
+                options.AddPolicy(name: "AllowOrigin", builder =>
+                    builder.SetIsOriginAllowed(_ => true)
+                        .AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .AllowCredentials());
+            });
+
             var identityServer = Environment.ExpandEnvironmentVariables(Configuration["IdentityServer:Authority"]);
 
             services.AddOptions();
@@ -119,7 +128,16 @@ namespace Sds.Osdr.WebApi
 
             services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.AddScoped<IUrlHelper, UrlHelper>(factory => new UrlHelper(factory.GetService<IActionContextAccessor>().ActionContext));
+            //services.AddScoped<IUrlHelper, UrlHelper>(factory => new UrlHelper(factory.GetService<IActionContextAccessor>().ActionContext));
+
+            services.AddScoped<IUrlHelper>(x => {
+                var actionContext = x.GetRequiredService<IActionContextAccessor>().ActionContext;
+                var factory = x.GetRequiredService<IUrlHelperFactory>();
+                return factory.GetUrlHelper(actionContext);
+            });
+
+
+
 
             services.Configure<SingleStructurePredictionSettings>(Configuration.GetSection("SingleStructurePredictionSettings"));
             services.Configure<FeatureVectorCalculatorSettings>(Configuration.GetSection("FeatureVectorCalculatorSettings"));
@@ -312,7 +330,7 @@ namespace Sds.Osdr.WebApi
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseWebSockets();
-            app.UseCors("default");
+            app.UseCors("AllowOrigin");
             // app.UseCors("AllowAnyOrigin");
 
             //app.UseWhen(context => context.Request.Path.StartsWithSegments("/api/machinelearning/features"), appBuilder =>
