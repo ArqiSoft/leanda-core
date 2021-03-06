@@ -77,8 +77,8 @@ namespace Sds.Osdr.Domain.FrontEnd
             var assemblies = new Assembly[]
             {
                 Assembly.LoadFrom("Sds.Osdr.Generic.dll"),
-                //Assembly.LoadFrom("Sds.Osdr.RecordsFile.dll"),
-                //Assembly.LoadFrom("Sds.Osdr.Chemicals.dll"),
+                Assembly.LoadFrom("Sds.Osdr.RecordsFile.dll"),
+                Assembly.LoadFrom("Sds.Osdr.Chemicals.dll"),
                 //Assembly.LoadFrom("Sds.Osdr.Crystals.dll"),
                 //Assembly.LoadFrom("Sds.Osdr.Reactions.dll"),
                 //Assembly.LoadFrom("Sds.Osdr.Spectra.dll"),
